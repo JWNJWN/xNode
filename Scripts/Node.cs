@@ -320,8 +320,8 @@ namespace XNode {
         [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
         public class CallbackAttribute : Attribute {
             public string callback;
-            /// <summary> Manually supply node class with a context menu path </summary>
-            /// <param name="menuName"> Path to this node in the context menu. Null or empty hides it. </param>
+            /// <summary> Mark a serializable field with a callback function. </summary>
+            /// <param name="callback"> Name of the function to call. </param>
             public CallbackAttribute(string callback) {
                 this.callback = callback;
             }
