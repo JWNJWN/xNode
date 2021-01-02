@@ -165,7 +165,7 @@ namespace XNode {
                 Debug.LogWarning("Port '" + fieldName + "' already exists in " + name, this);
                 return ports[fieldName];
             }
-            NodePort port = new NodePort(fieldName, type, direction, connectionType, typeConstraint, this);
+            NodePort port = new NodePort(fieldName, type, direction, connectionType, typeConstraint, fieldName, this); 
             ports.Add(fieldName, port);
             return port;
         }
@@ -314,6 +314,17 @@ namespace XNode {
             /// <param name="dynamicPortList">If true, will display a reorderable list of outputs instead of a single port. Will automatically add and display values for lists and arrays </param>
             [Obsolete("Use constructor with TypeConstraint")]
             public OutputAttribute(ShowBackingValue backingValue, ConnectionType connectionType, bool dynamicPortList) : this(backingValue, connectionType, TypeConstraint.None, dynamicPortList) { }
+        }
+
+        /// <summary> Mark an input/output port with a callback. </summary>
+        [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+        public class CallbackAttribute : Attribute {
+            public string callback;
+            /// <summary> Manually supply node class with a context menu path </summary>
+            /// <param name="menuName"> Path to this node in the context menu. Null or empty hides it. </param>
+            public CallbackAttribute(string callback) {
+                this.callback = callback;
+            }
         }
 
         /// <summary> Manually supply node class with a context menu path </summary>
