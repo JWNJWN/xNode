@@ -52,6 +52,13 @@ namespace XNode {
             }
         }
         private Type valueType;
+        public Func<object> Callback {
+            get {
+                if (callback == null && !string.IsNullOrEmpty(_callbackName)) callback = (Func<object>)_node.GetType().GetMethod(_callbackName).CreateDelegate(typeof(Func<object>), _node);
+                return callback;
+            }
+        }
+        private Func<object> callback;
 
         [SerializeField] private string _fieldName;
         [SerializeField] private Node _node;
@@ -61,6 +68,7 @@ namespace XNode {
         [SerializeField] private Node.ConnectionType _connectionType;
         [SerializeField] private Node.TypeConstraint _typeConstraint;
         [SerializeField] private bool _dynamic;
+        [SerializeField] private string _callbackName;
 
         /// <summary> Construct a static targetless nodeport. Used as a template. </summary>
         public NodePort(FieldInfo fieldInfo) {
@@ -73,10 +81,14 @@ namespace XNode {
                     _direction = IO.Input;
                     _connectionType = (attribs[i] as Node.InputAttribute).connectionType;
                     _typeConstraint = (attribs[i] as Node.InputAttribute).typeConstraint;
-                } else if (attribs[i] is Node.OutputAttribute) {
+                }
+                else if (attribs[i] is Node.OutputAttribute) {
                     _direction = IO.Output;
                     _connectionType = (attribs[i] as Node.OutputAttribute).connectionType;
                     _typeConstraint = (attribs[i] as Node.OutputAttribute).typeConstraint;
+                }
+                else if (attribs[i] is Node.CallbackAttribute) {
+                    _callbackName = (attribs[i] as Node.CallbackAttribute).callback;
                 }
             }
         }
@@ -89,11 +101,12 @@ namespace XNode {
             _dynamic = nodePort._dynamic;
             _connectionType = nodePort._connectionType;
             _typeConstraint = nodePort._typeConstraint;
+            _callbackName = nodePort._callbackName;
             _node = node;
         }
 
         /// <summary> Construct a dynamic port. Dynamic ports are not forgotten on reimport, and is ideal for runtime-created ports. </summary>
-        public NodePort(string fieldName, Type type, IO direction, Node.ConnectionType connectionType, Node.TypeConstraint typeConstraint, Node node) {
+        public NodePort(string fieldName, Type type, IO direction, Node.ConnectionType connectionType, Node.TypeConstraint typeConstraint, string callbackName, Node node) {
             _fieldName = fieldName;
             this.ValueType = type;
             _direction = direction;
@@ -101,6 +114,7 @@ namespace XNode {
             _dynamic = true;
             _connectionType = connectionType;
             _typeConstraint = typeConstraint;
+            _callbackName = callbackName;
         }
 
         /// <summary> Checks all connections for invalid references, and removes them. </summary>
@@ -118,7 +132,8 @@ namespace XNode {
         /// <returns> <see cref="Node.GetValue(NodePort)"/> </returns>
         public object GetOutputValue() {
             if (direction == IO.Input) return null;
-            return node.GetValue(this);
+            if (Callback != null) return Callback();
+            return null;
         }
 
         /// <summary> Return the output value of the first connected port. Returns null if none found or invalid.</summary>
@@ -126,6 +141,7 @@ namespace XNode {
         public object GetInputValue() {
             NodePort connectedPort = Connection;
             if (connectedPort == null) return null;
+            if (Callback != null) Callback();
             return connectedPort.GetOutputValue();
         }
 
