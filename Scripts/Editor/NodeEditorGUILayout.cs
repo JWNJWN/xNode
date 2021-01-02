@@ -304,7 +304,7 @@ namespace XNodeEditor {
 
         /// <summary> Is this port part of a DynamicPortList? </summary>
         public static bool IsDynamicPortListPort(XNode.NodePort port) {
-            string[] parts = port.fieldName.Split(' ');
+            string[] parts = port.fieldName.Split('_');
             if (parts.Length != 2) return false;
             Dictionary<string, ReorderableList> cache;
             if (reorderableListCache.TryGetValue(port.node, out cache)) {
@@ -324,7 +324,7 @@ namespace XNodeEditor {
             XNode.Node node = serializedObject.targetObject as XNode.Node;
 
             var indexedPorts = node.DynamicPorts.Select(x => {
-                string[] split = x.fieldName.Split(' ');
+                string[] split = x.fieldName.Split('_');
                 if (split != null && split.Length == 2 && split[0] == fieldName) {
                     int i = -1;
                     if (int.TryParse(split[1], out i)) {
@@ -362,7 +362,7 @@ namespace XNodeEditor {
 
             list.drawElementCallback =
                 (Rect rect, int index, bool isActive, bool isFocused) => {
-                    XNode.NodePort port = node.GetPort(fieldName + " " + index);
+                    XNode.NodePort port = node.GetPort(fieldName + "_" + index);
                     if (hasArrayData && arrayData.propertyType != SerializedPropertyType.String) {
                         if (arrayData.arraySize <= index) {
                             EditorGUI.LabelField(rect, "Array[" + index + "] data out of range");
@@ -401,8 +401,8 @@ namespace XNodeEditor {
                     // Move up
                     if (rl.index > reorderableListIndex) {
                         for (int i = reorderableListIndex; i < rl.index; ++i) {
-                            XNode.NodePort port = node.GetPort(fieldName + " " + i);
-                            XNode.NodePort nextPort = node.GetPort(fieldName + " " + (i + 1));
+                            XNode.NodePort port = node.GetPort(fieldName + "_" + i);
+                            XNode.NodePort nextPort = node.GetPort(fieldName + "_" + (i + 1));
                             port.SwapConnections(nextPort);
 
                             // Swap cached positions to mitigate twitching
@@ -415,8 +415,8 @@ namespace XNodeEditor {
                     // Move down
                     else {
                         for (int i = reorderableListIndex; i > rl.index; --i) {
-                            XNode.NodePort port = node.GetPort(fieldName + " " + i);
-                            XNode.NodePort nextPort = node.GetPort(fieldName + " " + (i - 1));
+                            XNode.NodePort port = node.GetPort(fieldName + "_" + i);
+                            XNode.NodePort nextPort = node.GetPort(fieldName + "_" + (i - 1));
                             port.SwapConnections(nextPort);
 
                             // Swap cached positions to mitigate twitching
@@ -444,9 +444,9 @@ namespace XNodeEditor {
             list.onAddCallback =
                 (ReorderableList rl) => {
                     // Add dynamic port postfixed with an index number
-                    string newName = fieldName + " 0";
+                    string newName = fieldName + "_0";
                     int i = 0;
-                    while (node.HasPort(newName)) newName = fieldName + " " + (++i);
+                    while (node.HasPort(newName)) newName = fieldName + "_" + (++i);
 
                     if (io == XNode.NodePort.IO.Output) node.AddDynamicOutput(type, connectionType, XNode.Node.TypeConstraint.None, newName);
                     else node.AddDynamicInput(type, connectionType, typeConstraint, newName);
@@ -461,7 +461,7 @@ namespace XNodeEditor {
                 (ReorderableList rl) => {
 
                     var indexedPorts = node.DynamicPorts.Select(x => {
-                        string[] split = x.fieldName.Split(' ');
+                        string[] split = x.fieldName.Split('_');
                         if (split != null && split.Length == 2 && split[0] == fieldName) {
                             int i = -1;
                             if (int.TryParse(split[1], out i)) {
@@ -521,7 +521,7 @@ namespace XNodeEditor {
                     // Add dynamic port postfixed with an index number
                     string newName = arrayData.name + " 0";
                     int i = 0;
-                    while (node.HasPort(newName)) newName = arrayData.name + " " + (++i);
+                    while (node.HasPort(newName)) newName = arrayData.name + "_" + (++i);
                     if (io == XNode.NodePort.IO.Output) node.AddDynamicOutput(type, connectionType, typeConstraint, newName);
                     else node.AddDynamicInput(type, connectionType, typeConstraint, newName);
                     EditorUtility.SetDirty(node);
